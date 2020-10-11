@@ -546,11 +546,17 @@ cpio解壓縮打包
 * Heap exploitation 的相關題目,在剛學heap exp的時候來解發現完全不會且漏洞的地方都沒找到。
 在只學了fastbin corruption 的attack是完全不夠解的且在glibc-2.26之後有tcache的機制所以又稍微不太一樣了。
 * 漏洞：
-    * 這題的漏洞是在比賽結束後看writeup看了好一陣子才理解的漏洞。成因在snprintf()這個function也就是位於menu()的copy()。
-    * snprintf 的 return value 是print的大小而不是寫入字串的大小,  由整個函數來看： int snprintf(char *str, size_t size, const char * restrict format, ...) 可以限制函數的size來阻擋在stack 或heap overflow的問題但是如果拿ret value 來當作大小的話則會存在overflow !。
+    * 這題的漏洞是在比賽結束後看writeup看了好一陣子才理解的漏洞。
+    成因在snprintf()這個function也就是位於menu()的copy()。
+    * snprintf 的 return value 是print的大小而不是寫入字串的大小,
+    由整個函數來看： int snprintf(char *str, size_t size, const char * restrict format, ...)
+    可以限制函數的size來阻擋在stack 或heap overflow的問題但是如果拿ret value 來當作大小的話則會存在overflow !。
+
+---
+
         * Poc: 
-             ```C
-             #include <stdio.h>
+             ```C 
+            #include <stdio.h>
             #include <stdlib.h>
 
             int main(){
@@ -563,9 +569,10 @@ cpio解壓縮打包
             
             ./poc 
             ret_val => 12
- 
            ```
-   ---
+           
+           
+---
    
 * 本題分析：
 ``` 
