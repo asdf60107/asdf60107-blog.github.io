@@ -5,9 +5,6 @@
 
 ---
 
-**Table of Contenet**
-
-
 ## study:
 ---
 ### ret2_dl_runtime:
@@ -16,9 +13,9 @@
 將一些library解析symbol的方式記錄起來
 
 
-參考資料
-- [layz-binding](http://wthung2.blogspot.com/2010/03/elf-lazy-binding.html)
-- [glibc/elf/elf.h](https://code.woboq.org/userspace/glibc/elf/elf.h.html)
+* lazy-binding & elf參考資料
+ *[layz-binding](http://wthung2.blogspot.com/2010/03/elf-lazy-binding.html)
+ *[glibc/elf/elf.h](https://code.woboq.org/userspace/glibc/elf/elf.h.html)
 
 ---
 * section & segment
