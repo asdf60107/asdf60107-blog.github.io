@@ -22,7 +22,7 @@
 
 ---
 
-- Lazy binding : 
+#### Lazy binding : 
     - dynamic link 時可能一些函式在library的函式在程式結束時可能都沒執行到。
     - 所以只有在call 到函式的時候才去解析函式位置，才會去尋找library函式中真正的位置。
 
@@ -98,6 +98,8 @@
 
 
 ---
+#### Source code 追追追
+--- 
 * section & segment
   *   section : 檔案存放code或者data的連續記憶體區段
   *    .bss .text .data .got .....
