@@ -36,8 +36,10 @@
  * p/x *(Elf64_Phdr *)0x400040
  * source code struct :
   * ![](https://i.imgur.com/hY0MUCe.png)
- ---
-- 對比一下source code
+---
+
+對比一下source code
+
 ![](https://i.imgur.com/YfDGpcD.png)
 * 由ELF Header那張圖可以看到Number of program headers 有9個而這個可以當array來印或是可以直接＠9就會直接印出九個program headers的內容。
   
