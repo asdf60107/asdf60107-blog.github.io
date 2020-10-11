@@ -1,13 +1,11 @@
 # CTF-Pwn 
 --- 
 記錄一些pwn的技巧以及一些題目的解法，內容如果有錯麻煩告知會盡快修改XD。
+
 ---
 
 **Table of Contenet**
 
-[TOCM]
-
-[TOC]
 
 ## study:
 ---
@@ -21,6 +19,13 @@
 - [layz-binding](http://wthung2.blogspot.com/2010/03/elf-lazy-binding.html)
 - [glibc/elf/elf.h](https://code.woboq.org/userspace/glibc/elf/elf.h.html)
 
+1. **section & segemnt**
+  section : 檔案存放code或者data的連續記憶體區段
+    .bss .text .data .got .....
+    objdump -j (section name) .got.plt -s (hex) ./binary
+    readelf -a | less 
+  
+  segment : 由多個sections組合成一個
 
 ![](https://i.imgur.com/PdPn1PU.png)
 
