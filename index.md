@@ -22,12 +22,16 @@
   *   section : 檔案存放code或者data的連續記憶體區段
   *    .bss .text .data .got .....
   *    objdump -j (section name) .got.plt -s (hex) ./binary
-  *    readelf -a |\ less 
+  *    readelf -a \| less 
   
-  segment : 由多個sections組合成一個
+* segment : 由多個sections組合成一個
 
 ![](https://i.imgur.com/PdPn1PU.png)
 
+* 可以用(gdb)x/s 0x400000 (program base) :"\177ELF\002\001\001"看magic string
+* 程式執行時section header不存在 所以以program header為主。
+* Program Header table 為 Elf64_Phdr 的陣列。
+ *
 
 ---
 ### IO_FILE_structure:
