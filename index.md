@@ -22,7 +22,7 @@
   *   section : 檔案存放code或者data的連續記憶體區段
   *    .bss .text .data .got .....
   *    objdump -j (section name) .got.plt -s (hex) ./binary
-  *    readelf -a | less 
+  *    readelf -a |\ less 
   
   segment : 由多個sections組合成一個
 
