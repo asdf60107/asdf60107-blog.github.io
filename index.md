@@ -19,12 +19,13 @@
 參考資料
 - [layz-binding](http://wthung2.blogspot.com/2010/03/elf-lazy-binding.html)
 - [glibc/elf/elf.h](https://code.woboq.org/userspace/glibc/elf/elf.h.html)
+
 ---
--  **section & segemnt**
-  -  section : 檔案存放code或者data的連續記憶體區段
-  -    .bss .text .data .got .....
-  -    objdump -j (section name) .got.plt -s (hex) ./binary
-  -    readelf -a | less 
+* section & segment
+  *   section : 檔案存放code或者data的連續記憶體區段
+  *    .bss .text .data .got .....
+  *    objdump -j (section name) .got.plt -s (hex) ./binary
+  *    readelf -a | less 
   
   segment : 由多個sections組合成一個
 
