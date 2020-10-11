@@ -400,6 +400,7 @@ python version :
         * 把0x602148那邊先改free_got,puts_got,atoi_got(payload2)
         * leak只要把free_got改成puts_plt就可以用puts(puts_got)來leak
         * 算出libc_base後把atoi_got改system之後input /bin/sh就拿shell了
+      
 ---
 
 Hitcon_stkof exp:
@@ -506,6 +507,7 @@ kernel mode :
     * kptr_restrict : 允許查看kernel functions address
     * dmesg_restrict : 允許使用printk查看輸出
     * MMAP_MIN_ADDR : 不允許申請NULL(大小的memory)
+
 ---
 
 #### ret2user
@@ -585,8 +587,10 @@ cpio解壓縮打包
         * 透過copy()函數去leak libc 
         * 去改__malloc_hook -> one_gadget
         * get shell 
+
 ---
 Exp: 
+
 ```python
 from pwn import *
 import sys
