@@ -553,23 +553,22 @@ cpio解壓縮打包
     可以限制函數的size來阻擋在stack 或heap overflow的問題但是如果拿ret value 來當作大小的話則會存在overflow !。
 
 ---
+Poc: 
+```C 
+#include <stdio.h>
+#include <stdlib.h>
+int main(){
+char str1[10];
+int ret_val ;
+ret_val = snprintf(str1,9,"AAAABBBBCCCC");
+printf("ret_val => %d\n",ret_val);
+return 0 ;
+}
+```
 
-        * Poc: 
-             ```C 
-            #include <stdio.h>
-            #include <stdlib.h>
+./poc 
+et_val => 12
 
-            int main(){
-            char str1[10];
-            int ret_val ;
-            ret_val = snprintf(str1,9,"AAAABBBBCCCC");
-            printf("ret_val => %d\n",ret_val);
-            return 0 ;
-            }
-            
-            ./poc 
-            ret_val => 12
-           ```
            
            
 ---
