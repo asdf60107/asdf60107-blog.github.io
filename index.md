@@ -237,7 +237,7 @@ _dl_runtime_resolve(link_map,reloc_arg)
 ---
 
 * link_map struct : 
-    * ![glibc/include/link.h](https://code.woboq.org/userspace/glibc/include/link.h.html)
+    * [glibc/include/link.h](https://code.woboq.org/userspace/glibc/include/link.h.html)
     * l_next linked list 串接下一個以載入的library
     * l_name library name
     * l_addr library base addr
