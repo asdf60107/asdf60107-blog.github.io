@@ -1,10 +1,17 @@
 # CTF-Pwn 
+--- 
+記錄一些pwn的技巧以及一些題目的解法，內容如果有錯麻煩告知會盡快修改XD。
+---
+[TOCM]
+
+[TOC]
 
 ## study:
 ---
 ### ret2_dl_runtime:
 
 需要對lazy binding 差不多熟悉, 以及會需要elf檔案的一些background
+將一些library解析symbol的方式記錄起來
 
 
 參考資料
