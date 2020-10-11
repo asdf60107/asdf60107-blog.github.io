@@ -9,6 +9,9 @@
 ---
 ### ret2_dl_runtime:
 
+- **大部分內容都是從ntu的stcs的week8來的** 看過後自己實作跟追蹤一次
+
+
 需要對lazy binding 差不多熟悉, 以及會需要elf檔案的一些background
 將一些library解析symbol的方式記錄起來
 
