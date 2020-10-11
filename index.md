@@ -70,6 +70,7 @@ array來印或是可以直接＠9就會直接印出九個program headers的內�
     ![](https://i.imgur.com/pFGVy7P.png)
     
 * Dynamic Entry
+    
     * 用 d_val 或是 d_ptr 取決於 d_tag (DT_?????)
     * ![](https://i.imgur.com/TlHmUR8.png)
     
@@ -101,6 +102,39 @@ array來印或是可以直接＠9就會直接印出九個program headers的內�
         * Elf64_R_SYM 取高32bit ,Elf32_R_SYM 取高24bit
         * Symbol index 為 .dynsym 中的index。
             * 所以 $dynstr + $dynsym[index]-> st_name 可以拿到symbol。
+            
+* 解析GOT上的functions
+    * GOT entry 原本的值是.plt entry 中的第二條指令(Ex:push 0x4) push reloc_arg(.rel.plt 中的offset)ㄝ,在rela時候為index.之後跳到.plt中的第一行（PLT0)-> plt section 開頭。
+    
+    * puts_plt 會先嘗試跳GOT(可是第一次function還沒resolve所以直接跳push 0x0 (index)),之後就跳PLT0（可看addr) jmp 0x400400。
+    ![](https://i.imgur.com/1LiFuXt.png)
+    
+    * 下圖為PLT0
+    ![](https://i.imgur.com/Sug3Dao.png)
+
+    * PLT0 (.got.plt x/3gx)
+        * push (GOT1) (struct link_map*) pointer
+        * jump (GOT2) 跳到 dynamic resolver 開找symbol。
+        * 圖中：0x601000 的位置為GOT0 裡面放index(or offset)
+        * 圖中：0x601008 的位置為GOT1 裡面放(struct link_map)
+        * 圖中：0x601000 的位置為GOT2 裡面放_dl_runtime_resolve()
+    ![](https://i.imgur.com/WaF5HaD.png)
+
+
+* Dynamic Resolver 
+    * source : glibc/elf/dl_runtime.c
+    * 要link_map , reloc_arg 當參數
+    * struct link_map 裡面其實就存了所有已載入的ELF資訊
+    * 取symbol name 去library 找到後填回GOT. (0x6010xx)
+
+* Workflow
+    可以看到dynstr 裡面就是string table 所以+ st_name (index) 就可以拿到symbol。
+    
+    * ![](https://i.imgur.com/ySLt7f6.png)
+
+    * ![](https://i.imgur.com/HcMn0JE.png)
+
+
 
 ---
 ### IO_FILE_structure:
