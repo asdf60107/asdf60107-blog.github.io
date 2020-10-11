@@ -554,15 +554,16 @@ cpio解壓縮打包
 
 ---
 Poc: 
-```C 
+
+```c
 #include <stdio.h>
 #include <stdlib.h>
 int main(){
-char str1[10];
-int ret_val ;
-ret_val = snprintf(str1,9,"AAAABBBBCCCC");
-printf("ret_val => %d\n",ret_val);
-return 0 ;
+   char str1[10];
+   int ret_val ;
+   ret_val = snprintf(str1,9,"AAAABBBBCCCC");
+   printf("ret_val => %d\n",ret_val);
+   return 0 ;
 }
 ```
 
