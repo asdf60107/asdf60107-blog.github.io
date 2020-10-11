@@ -1,7 +1,7 @@
 ---
 # CTF-Pwn 
 --- 
-記錄一些pwn的技巧以及一些題目的解法，內容如果有錯麻煩告知會盡快修改XD。
+**記錄一些pwn的技巧以及一些題目的解法，內容如果有錯麻煩告知會盡快修改XD。**
 
 ---
 
@@ -41,8 +41,31 @@
 對比一下source code
 
 ![](https://i.imgur.com/YfDGpcD.png)
-* 由ELF Header那張圖可以看到Number of program headers 有9個而這個可以當array來印或是可以直接＠9就會直接印出九個program headers的內容。
-  
+* 由ELF Header那張圖可以看到Number of program headers 有9個而這個可以當
+array來印或是可以直接＠9就會直接印出九個program headers的內容。
+
+* dynamic section 
+ * 解析symbol重要的section
+ * 沒有section header table ,但可以從program header table 找到
+ * 找出 p_type 值為 PT_DYNAMIC 的 program header
+ * Base + p_offset = .dynamic
+
+---
+* 可以看到 PT_DYNAMIC 的 p_type 值為2
+    ![](https://i.imgur.com/ipVABp8.png)
+    ***
+    * 所以可以印出來檢查
+
+    ![](https://i.imgur.com/tTCSV4B.png)
+    ***
+    * 去比對一下用readelf抓出來的
+    
+    ![](https://i.imgur.com/3rdnlJ0.png)
+    ***
+    
+    * 是Elf64_Dyn 的陣列。 
+    ![](https://i.imgur.com/pFGVy7P.png)
+    
 
 ---
 ### IO_FILE_structure:
