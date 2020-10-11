@@ -21,6 +21,83 @@
   * [glibc/elf/elf.h](https://code.woboq.org/userspace/glibc/elf/elf.h.html)
 
 ---
+
+- Lazy binding : 
+    - dynamic link 時可能一些函式在library的函式在程式結束時可能都沒執行到。
+    - 所以只有在call 到函式的時候才去解析函式位置，才會去尋找library函式中真正的位置。
+
+
+---
+
+- GOT (Global Offset Table) : 
+    - 為一個全域變數的array
+    - 存放library 函式的offset
+    - 一開始只填plt的jump code
+    
+
+
+---
+
+- PLT (Procedure Linkage Table) : 
+    - call _dl_resolver()去解析函式真正位置
+    - 把解析出來位置填回GOT
+
+---
+
+- GOT : 0x601020
+- PLT : 0x400476
+- ![](https://i.imgur.com/VaDmv1Y.png)
+
+
+---
+
+- 剛進去的時候
+ - 進去read的時候:
+ - ![](https://i.imgur.com/hs5bTAa.png)
+
+
+
+---
+
+- JUMP回去
+ - JUMP 回去push offset 的地方
+ - ![](https://i.imgur.com/VENtILu.png)
+
+
+---
+
+- 找實際位置
+ - 去找目標函式的位址並填到 GOT (0x601020) 然後跳過去執行
+ - ![](https://i.imgur.com/UP3avDS.png)
+
+
+---
+
+- push link_map structure 
+ - ![](https://i.imgur.com/ML4xkHx.png)
+ - ![](https://i.imgur.com/nJUID93.png)
+
+
+---
+
+- 跳去resolver 
+ - ![](https://i.imgur.com/xKkzwDT.png)
+ - ![](https://i.imgur.com/pghlEVc.png)
+
+---
+
+- 解好之前 GOT
+ - ![](https://i.imgur.com/J0fBPkv.png)
+
+
+
+---
+
+- 解完後 GOT
+ - ![](https://i.imgur.com/AgMveYx.png)
+
+
+---
 * section & segment
   *   section : 檔案存放code或者data的連續記憶體區段
   *    .bss .text .data .got .....
