@@ -135,6 +135,103 @@ array來印或是可以直接＠9就會直接印出九個program headers的內�
     * ![](https://i.imgur.com/HcMn0JE.png)
 
 
+```
+_dl_runtime_resolve(link_map,reloc_arg)
+     ------------               ｜
+     |Elf64_Rela|   <-----------｜
+ --- |----------|      
+ |   |r_offset  |
+ |   |r_info    |  --------->  --------------
+ |   ------------              |Elf64_Sym   |  --->  find the symbol ! 
+ v                             --------------         --------------
+--------                       |st_name     |         |printf\0    |
+|printf|                       --------------         --------------
+--------
+.got.plt
+```
+
+- link_map gogo
+
+---
+
+* link_map struct : 
+    * glibc/include/link.h https://code.woboq.org/userspace/glibc/include/link.h.html
+    * l_next linked list 串接下一個以載入的library
+    * l_name library name
+    * l_addr library base addr
+    * l_info[index] 指向 .dynamic 中, d_tag = index 的欄位
+        * 可以拿到 library 各個section 也就是拿.dynsym就可以解symbol.....
+
+
+* gdb link_map trace 
+    * set $l = (struct link_map *)link_map_addr
+    * set $l2 = $l -> l_next -> l_next (libc)
+    * set $dynstr2 = (char *) addr (可以用 (gdb) p * $l2->l_info[5] (d_tag=5))
+    * set $dynsym = (Elf64_Sym*)addr(同上 只是d_tag改為6)
+    * 手解symbol: dynstr + dynsym[index] ->st_name 可以找到function 
+        * 這裡可以用python script 去找symbol: 
+        * ```python
+            for i in range(1000):
+                x = gdb.execute('p/s $dynstr2 + $dynsym2[%d] -> st_name ' %i , True ,True)
+                if 'printf' in x:
+                    print (i,x)
+            end
+            ```
+    * 找到printf為 603 所以可以知道printf的symbol
+
+    ![](https://i.imgur.com/36qUwh9.png)
+
+    * ptype $dynsym2 可以拿到struct
+    * 所以可以 p/x $dynsym2[603]拿到以下結構 value為offset。所以加上
+    libc_base ( $ l2 -> l_addr ) 可以拿到libc中printf的位置。
+
+
+    * x/s $l2-> l_addr + $dynsym2[603]-> st_value
+    ![](https://i.imgur.com/QR55xUJ.png)
+
+---
+  
+###  Symbol Resolution 
+* dl_runtime_resolve -> _dl_fixup(link_map,reloc_arg)
+* 可以直接掃整個 .dynsym 去檢查st_name 找需要的symbol
+* 但是太花時間所以使用一個小小的 GNU Hash table 
+```C
+uint32_t_dl_new_hash(const char*s){
+    uint32_t h = 5381;
+    for(unsigned char c = *s ; c!='\0'; c= *++s)
+        h = h*33 +c
+    return h ;
+}
+```
+python version : 
+![](https://i.imgur.com/oZSxLPI.png)
+
+* 查找hash table 
+    * int b = l_gnu_buckets[hash % l_nbuckets]
+    * i = b 開始檢查
+        * ((l_gnu_chain_zero[i] ^ hash) >> 1) == 0
+        * 直到(l_gnu_chain_zero[i] & 1 )!=0
+            * 若相等 , sym = .dynsym[i] 就是第i個 Elf64_Sym
+            * 再檢查 sym -> st_name 是否相等,避免collison
+    * sym -> st_value + l_addr 就是 function 在libc中的實際位置。
+    
+    ****
+     找 l_nbuckets :  
+    ![](https://i.imgur.com/jf4kmHl.png)
+
+    找int b = l_gnu_buckets[hash % l_nbuckets]
+    不管64bit 還是32bit 都是word長度
+    b = 0x25a
+    ![](https://i.imgur.com/RPa7SH8.png)
+    
+    讓i=b(0x25a)開始找 可以看到當index為0x25b時會符合條件
+    所以 sym = dynsym[0x25b]
+    ![](https://i.imgur.com/pV3yklU.png)
+    
+    如圖 成功拿到printf 的symbol
+    ![](https://i.imgur.com/rWqYRaB.png)
+
+    
 
 ---
 ### IO_FILE_structure:
