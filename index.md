@@ -123,7 +123,8 @@
  * 由上圖知道program header entry = 0x400000 + 64 (0x40)
  * p/x *(Elf64_Phdr *)0x400040
  * source code struct :
-  * ![](https://i.imgur.com/hY0MUCe.png)
+   ![](https://i.imgur.com/hY0MUCe.png)
+
 ---
 
 對比一下source code
