@@ -1,1 +1,10 @@
 theme: jekyll-theme-hacker
+title: LiEn
+description: Pwn的一些小記錄
+
+avatarTitle: LiEn
+avatarDesc: pwn /CTF
+url : "https://lien.github.io/"
+
+nav: 
+  - {title: 關於我, description: about , url: '/about'}
