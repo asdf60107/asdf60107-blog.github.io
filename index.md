@@ -6,9 +6,6 @@
 
 ---
 
-## study:
----
-
 * This will become a table of contents (this text will be scrapped).
 {:toc}
 
@@ -33,7 +30,6 @@
     - dynamic link 時可能一些函式在library的函式在程式結束時可能都沒執行到。
     - 所以只有在call 到函式的時候才去解析函式位置，才會去尋找library函式中真正的位置。
 
-
 ---
 
 - GOT (Global Offset Table) : 
@@ -41,8 +37,6 @@
     - 存放library 函式的offset
     - 一開始只填plt的jump code
     
-
-
 ---
 
 - PLT (Procedure Linkage Table) : 
@@ -55,7 +49,6 @@
 - PLT : 0x400476
 - ![](https://i.imgur.com/VaDmv1Y.png)
 
-
 ---
 
 - 剛進去的時候
@@ -63,13 +56,11 @@
  - ![](https://i.imgur.com/hs5bTAa.png)
 
 
-
 ---
 
 - JUMP回去
  - JUMP 回去push offset 的地方
  - ![](https://i.imgur.com/VENtILu.png)
-
 
 ---
 
@@ -84,7 +75,6 @@
  - ![](https://i.imgur.com/ML4xkHx.png)
  - ![](https://i.imgur.com/nJUID93.png)
 
-
 ---
 
 - 跳去resolver 
@@ -96,13 +86,10 @@
 - 解好之前 GOT
  - ![](https://i.imgur.com/J0fBPkv.png)
 
-
-
 ---
 
 - 解完後 GOT
  - ![](https://i.imgur.com/AgMveYx.png)
-
 
 ---
 #### Source code 追追追
@@ -518,9 +505,11 @@ kernel mode :
     * kptr_restrict : 允許查看kernel functions address
     * dmesg_restrict : 允許使用printk查看輸出
     * MMAP_MIN_ADDR : 不允許申請NULL(大小的memory)
-****
+---
 
 #### ret2user
+
+---
 
 * 中國比賽的題目連結: https://github.com/eternalsakura/ctf_pwn/blob/master/%E5%BC%BA%E7%BD%91%E6%9D%AF2018/core_give.tar
 * 環境安裝 : https://eternalsakura13.com/2018/03/31/b_core/
@@ -529,6 +518,7 @@ kernel mode :
 ---
 
 cpio解壓縮打包
+
 
 * 解壓縮流程
     * 隨便創一個資料夾
