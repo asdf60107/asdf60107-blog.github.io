@@ -66,6 +66,38 @@ array來印或是可以直接＠9就會直接印出九個program headers的內�
     * 是Elf64_Dyn 的陣列。 
     ![](https://i.imgur.com/pFGVy7P.png)
     
+* Dynamic Entry
+    * 用 d_val 或是 d_ptr 取決於 d_tag (DT_?????)
+    * ![](https://i.imgur.com/TlHmUR8.png)
+    
+* .dynstr section 
+    * d_tag 為 DT_STRTAB(5)
+    * 為 .dynsym 中 st_name 對應的 string table 
+    * sym_name = (char*)(.dynstr + st_name)
+    * st_name 為 Elf64_Sym 中的 string table index
+
+
+* .dynsym section 
+    * 在.dynamic d_tag 為 DT_SYMTAB(6)
+    * d_ptr 指向 .dynsym section 。
+    * st_name 指向 symbol name string 。
+
+    ![](https://i.imgur.com/F8fb76w.png)
+    
+    ![](https://i.imgur.com/Bj9ATZ0.png)
+    
+    * 所以根據上圖可以知道dynsym ,跟 dynstr 
+      用gdb記錄一下：
+      set $dynsym = (Elf64_Dyn*)0x4002d0
+      set $dynstr = (char*)0x400330
+    
+* .rel.plt
+    * d_tag 為DT_JMPREL (7), struct 為 Elf64_Rel(debug mode: Ellf64_Rela)
+    * r_offset 為got要填的地方。
+    * r_info 中包含 symbol index 。
+        * Elf64_R_SYM 取高32bit ,Elf32_R_SYM 取高24bit
+        * Symbol index 為 .dynsym 中的index。
+            * 所以 $dynstr + $dynsym[index]-> st_name 可以拿到symbol。
 
 ---
 ### IO_FILE_structure:
