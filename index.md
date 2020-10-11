@@ -53,15 +53,18 @@ array來印或是可以直接＠9就會直接印出九個program headers的內�
 ---
 * 可以看到 PT_DYNAMIC 的 p_type 值為2
     ![](https://i.imgur.com/ipVABp8.png)
-    ***
+    
+    ---
+    
     * 所以可以印出來檢查
 
     ![](https://i.imgur.com/tTCSV4B.png)
-    ***
+   
+    ---
     * 去比對一下用readelf抓出來的
     
     ![](https://i.imgur.com/3rdnlJ0.png)
-    ***
+    ---
     
     * 是Elf64_Dyn 的陣列。 
     ![](https://i.imgur.com/pFGVy7P.png)
