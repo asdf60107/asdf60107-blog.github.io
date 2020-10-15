@@ -1,6 +1,7 @@
 ---
+layout: page
 title: Whoami
-subtitle: GOGO!!! 
+subtitle: 
 ---
 
 Pwn 新手，透過blog來記錄一些所學。
